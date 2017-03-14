@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title><%= title %></title>
+	<link rel='stylesheet' href='/stylesheets/style.css' />
+	<script type="text/javascript" src="https://code.jquery.com/jquery.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.core.min.js"></script>
+	<script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+	<script src="/socket.io/socket.io.js"></script>
+	<script>
+	$("document").ready(function() {
+		var socket = io.connect();
+		socket.on("progress", function(data) {
+			console.log(data.bytesReceived);
+			console.log(data.bytesExpected);
+			$("#progress").html( data.bytesReceived + "/" + data.bytesExpected)
+		} )
+	})
+
+	</script>
+</head>
+<body>
+	<h1><%= title %></h1>
+	<p>Welcome to <%= title %></p>
+	<form action="/upload" enctype="multipart/form-data" method="post">
+		<input type="file" name="upload" multiple>
+		<input type="submit" value="Upload">
+	</form>
+	<p id="progress"></p>
+</body>
+</html>

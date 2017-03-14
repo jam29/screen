@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title><%= magasin %></title>
+	
+	<link rel='stylesheet' href='/stylesheets/style.css' />
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/bootstrap/3.3.7/css/bootstrap.min.css">
+
+	<script type="text/javascript" src="https://code.jquery.com/jquery.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.core.min.js"></script>
+	<script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+	<script src="/socket.io/socket.io.js"></script>
+	<script>
+	
+	$("document").ready(function() {
+		var socket = io.connect();
+
+				var socketName = "<%= magasin %><%= caisse %>" ;
+				socket.emit("enregistrer",socketName);
+
+				socket.on("affiche_ticket",function(ticket){
+					$("#pub").hide()
+					$("#client").html(ticket.client);
+					$("ul#liste").empty();
+					_.map(ticket.articles,function(art){
+						$("ul#liste").append("<li>"+art.article+"</li>")
+					})
+
+				})
+
+				socket.on("affiche_pub",function(){ $("#pub").show(); })
+
+				socket.on("reconnect",function(){
+					socket.emit("enregistrer",socketName);
+				})
+
+		})
+	</script>
+</head>
+
+<body>
+	<div class="container-fluid">
+		<div class="row">
+			<div class="col-md-12">
+				<h1><%= magasin %></h1>
+			</div>
+		</div>
+
+		<div class="row">
+
+			<div id="pub" class="col-md-6">
+				<div>
+					<img class="img-responsive" src="http://localhost:3030/images/promo.jpg" />	
+				</div>
+			</div>
+
+			<div class="col-md-6">
+				<div id="ticket">
+					<p>Bienvenue sur la caisse de <%= caisse %></p>
+					<p id="client"></p>
+					<ul id="liste">		
+					</ul>
+				</div>
+			</div>
+
+		</div>
+	</div>
+</body>
+</html>

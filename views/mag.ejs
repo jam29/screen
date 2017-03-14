@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title><%= magasin %></title>
+	
+	<link rel='stylesheet' href='/stylesheets/style.css' />
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/bootstrap/3.3.7/css/bootstrap.min.css">
+
+	<script src="https://cdn.jsdelivr.net/jquery/3.1.1/jquery.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/bootstrap/4.0.0-alpha.5/js/bootstrap.min.js"></script>
+	<script src="/socket.io/socket.io.js"></script>
+	<script>
+	
+	$("document").ready(function(){
+		var socket = io.connect("http://localhost:3000");
+		socket.emit("connection:<%= magasin %>:<%= caisse %>");
+		
+	});
+	</script>
+</head>
+
+<body>
+	<div class="container-fluid">
+		<div class="row">
+			<div class="col-md-12">
+				<h1><%= magasin %></h1>
+			</div>
+		</div>
+
+		<div class="row">
+
+			<div class="col-md-6">
+				<div id="pub">
+					<img class="img-responsive" src="http://imageshack.com/a/img924/8553/dW52b3.png" />	
+				</div>
+			</div>
+
+			<div class="col-md-6">
+				<div id="ticket">
+					<p>Bienvenue sur la caisse de <%= caisse %></p>
+					<ul>		
+					</ul>
+				</div>
+			</div>
+
+		</div>
+	</div>
+</body>
+</html>
