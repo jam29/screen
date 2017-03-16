@@ -2,11 +2,14 @@
 kerawen afficheur
 
 * enrollement
-** Pour créer une ligne dans la base screen; faire un POST de
-*** cle_kerawen
-*** id_shop
-*** id_cash_drawer
-*** mail ?
+
+Pour créer une ligne dans la base screen; faire un POST de
+
+cle_kerawen
+
+id_shop
+id_cash_drawer
+mail ?
 
 * pour uploader l'image publicitaire et le logo faire un POST de
 ** fichier jpeg
