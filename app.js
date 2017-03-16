@@ -11,7 +11,8 @@ var path = require('path');
 var https      = require('https');
 var http      = require('http');
 var favicon = require('serve-favicon');
-var logger = require('morgan');
+var morgan = require('morgan');
+
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
@@ -33,12 +34,15 @@ var app     = express();
 var server  = http.createServer(app);
 // var server  = https.createServer(options,app);
 
+var accessLogStream = fs.createWriteStream(__dirname + '/access.log', {flags: 'a'})
+app.use(morgan('combined', {stream: accessLogStream}))
+
 var mongoose = require('mongoose');
 mongoose.Promise = require('bluebird');
 var db = mongoose.connect('mongodb://localhost/kerawenroll');
 
 var session = Session({
-    // store: new FileStore,
+    store: new FileStore,
     secret: 'keyboard cat',
     resave: true,
     saveUninitialized: true
@@ -58,8 +62,6 @@ app.set('view engine', 'ejs');
 // uncomment after placing your favicon in /public
 //app.use(favicon(__dirname + '/public/favicon.ico'));
 
-
-app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -102,23 +104,26 @@ io.on("connection",function(socket)
         console.log(caissesSockets);
     })
 
-    socket.on("ticket:"+socket.handshake.query.magasin+":"+socket.handshake.query.caisse,function(ticket) {
-          var to_caisse = socket.handshake.query.magasin+socket.handshake.query.caisse ;
-          var id = caissesSockets[to_caisse].socket ;
-          io.sockets.connected[id].emit("affiche_ticket",ticket); 
+    socket.on("ticket:"+socket.handshake.query.url_longue+":"+socket.handshake.query.magasin+":"+socket.handshake.query.caisse,function(ticket) {
+          var to_caisse = socket.handshake.query.url_longue+socket.handshake.query.magasin+socket.handshake.query.caisse ;
+          if (caissesSockets[to_caisse]) {
+            var id = caissesSockets[to_caisse].socket ;
+            io.sockets.connected[id].emit("affiche_ticket",ticket); 
+          } else {
+            socket.emit("caisse:out");
+          }
     })
 
     socket.on("affiche_pub",function() {
-      var to_caisse = socket.handshake.query.magasin+socket.handshake.query.caisse
+      var to_caisse = socket.handshake.query.url_longue+socket.handshake.query.magasin+socket.handshake.query.caisse
           var id = caissesSockets[to_caisse].socket;
-          io.sockets.connected[id].emit("affiche_pub"); 
-
+          io.sockets.connected[id].emit("affiche_pub");
     })
   }
 )
 
 //--- Afficheur
-app.get("/mag/:mag/:caisse",function(req,res) {
+app.get("/mag/:url_longue/:mag/:caisse",function(req,res) {
   
 /*
     io.on("connection",function(socket) {
@@ -128,7 +133,7 @@ app.get("/mag/:mag/:caisse",function(req,res) {
     })
 */
 
-  res.render('index', { title: 'CAISSE KERAWEN' ,  magasin: req.params.mag , caisse: req.params.caisse });
+  res.render('index', { title: 'CAISSE KERAWEN' ,  url_longue: req.params.url_longue, magasin: req.params.mag , caisse: req.params.caisse  });
 })
 
 
@@ -137,13 +142,13 @@ var Controller = require('./lib/controller.js');
 //--- enrollement.
 app.post('/enroll',Controller.addCaisse) ;
 
-
 //--- upload image + css.
 
 app.get('/formupload/:mag/:caisse',function(req,res) {
     res.render("formupload",{title:'gestion de la pub'});
 })
 
+//---
 
 var makePath = function(path) {
   try {
@@ -160,29 +165,27 @@ app.post('/upload/', function (req, res) {
 
     form.on('field',function(field,value){
            fields[field]=value;
-          console.log(fields);
     })
 
     form.on('fileBegin', function (name, file) {
-        console.log('fileBegin');
         file.path = __dirname + '/uploads/' + file.name;
     });
 
     form.on('progress', function(bytesReceived, bytesExpected) {
-         console.log('progress');
+         console.log('progress')
     });
 
     form.on('file', function (name, file) {
         console.log('Uploaded ' + file.name); 
-     
-        fs.ensureDir('uploads/'+fields['magasin']+'/'+fields['caisse']+'/');
-        var source = fs.createReadStream(__dirname + '/uploads/' + file.name);
-        var dest =  fs.createWriteStream(__dirname + '/uploads/' + fields['magasin'] + '/' + fields['caisse'] + '/' + fields['nomfichier']);
+    
+        fs.ensureDir('public/uploads/'+fields['magasin']+'/'+fields['caisse']+'/',function(){
+          var source = fs.createReadStream(__dirname + '/uploads/' + file.name);
+          var dest =  fs.createWriteStream(__dirname + '/public/uploads/' + fields['magasin'] + '/' + fields['caisse'] + '/' + fields['nomfichier']);
 
-        source.pipe(dest);
-        source.on('end', function() { console.log('copied'); });
-        source.on('error', function(err) { console.log('error'); });
-        
+          source.pipe(dest);
+          source.on('end', function() { console.log('copied'); });
+          source.on('error', function(err) { console.log('error'); });
+        })
     });
 
     form.parse(req, function(err, fields, files) {

@@ -15,11 +15,11 @@
 	$("document").ready(function() {
 		var socket = io.connect();
 
-				var socketName = "<%= magasin %><%= caisse %>" ;
+				var socketName = "<%= url_longue %><%= magasin %><%= caisse %>" ;
 				socket.emit("enregistrer",socketName);
 
 				socket.on("affiche_ticket",function(ticket){
-					$("#pub").hide()
+					
 					$("#client").html(ticket.client);
 					$("ul#liste").empty();
 					_.map(ticket.articles,function(art){
@@ -27,8 +27,6 @@
 					})
 
 				})
-
-				socket.on("affiche_pub",function(){ $("#pub").show(); })
 
 				socket.on("reconnect",function(){
 					socket.emit("enregistrer",socketName);
@@ -41,28 +39,38 @@
 <body>
 	<div class="container-fluid">
 		<div class="row">
-			<div class="col-md-12">
-				<h1><%= magasin %></h1>
+			<div class="col-md-12 col-xs-12">
+				<h4>Magasin: <%= magasin %>  - Bienvenue sur la caisse <%= caisse %></p></h4>
 			</div>
 		</div>
 
 		<div class="row">
 
-			<div id="pub" class="col-md-6">
+			<div id="pub" class="col-md-8 col-xs-8">
 				<div>
-					<img class="img-responsive" src="http://localhost:3030/images/promo.jpg" />	
+					<img class="img-responsive" src='http://localhost:3030/uploads/<%= magasin %>/<%= caisse %>/pub_<%= caisse %>.jpg' />	
 				</div>
 			</div>
 
-			<div class="col-md-6">
+			<div class="col-md-4 col-xs-4 pre-scrollable" >
+
 				<div id="ticket">
-					<p>Bienvenue sur la caisse de <%= caisse %></p>
-					<p id="client"></p>
+					<div id="logo"><img src='http://localhost:3030/uploads/<%= magasin %>/<%= caisse %>/logo_<%= caisse %>.jpg'></div>	
+					<div id="client" ></div>
 					<ul id="liste">		
 					</ul>
 				</div>
 			</div>
 
+		</div>
+		
+		<div class="row">
+			<div class="col-md-8 col-xs-8">
+				<span id="kerawen">KERAWEN.COM &copy </span>
+			</div>
+			<div class="col-md-4 col-xs-4" style="background-color:silver">
+				<span id="total">TOTAL : </span><span id="total">0.00</span>
+			</div>
 		</div>
 	</div>
 </body>
