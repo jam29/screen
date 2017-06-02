@@ -15,8 +15,8 @@ kerawen afficheur
 	* id_caisse
 
 * pour uploader le css 
-	* fichier jpeg
-	* nom du fichier (pub_+id_cash_drawer.jpg) ?? 
+	* fichier css
+	* nom du fichier (pub_+id_cash_drawer.css) ?? 
 	* id_shop
 	* id_caisse
 
