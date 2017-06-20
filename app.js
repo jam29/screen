@@ -20,19 +20,18 @@ mongoose.Promise = require('bluebird');
 
 var formidable = require('formidable');
 
-
 require('./lib/model.js');
 
-/*
+
 var options = {
   key: fs.readFileSync('key.pem'),
   cert: fs.readFileSync('key-cert.pem')
 }
-*/
+
 
 var app     = express();
-var server  = http.createServer(app);
-// var server  = https.createServer(options,app);
+//var server  = http.createServer(app);
+var server  = https.createServer(options,app);
 
 var accessLogStream = fs.createWriteStream(__dirname + '/access.log', {flags: 'a'})
 app.use(morgan('combined', {stream: accessLogStream}))
@@ -49,10 +48,10 @@ var session = Session({
   })
 
 app.use(cors());
-app.use(session);
+//app.use(session);
 
 var io = socket.listen(server);
-io.use(ios(session));
+//io.use(ios(session));
 
 
 // view engine setup
@@ -60,17 +59,13 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
 // uncomment after placing your favicon in /public
-//app.use(favicon(__dirname + '/public/favicon.ico'));
+// app.use(favicon(__dirname + '/public/favicon.ico'));
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(session);
-
-// app.use('/', routes);
-// app.use('/users', users);
-
 
 // development error handler
 // will print stacktrace
@@ -105,6 +100,7 @@ io.on("connection",function(socket)
     })
 
     socket.on("ticket:"+socket.handshake.query.url_longue+":"+socket.handshake.query.magasin+":"+socket.handshake.query.caisse,function(ticket) {
+	    console.log("Ticket reçu");
           var to_caisse = socket.handshake.query.url_longue+socket.handshake.query.magasin+socket.handshake.query.caisse ;
           if (caissesSockets[to_caisse]) {
             var id = caissesSockets[to_caisse].socket ;
@@ -124,18 +120,19 @@ io.on("connection",function(socket)
 
 //--- Afficheur
 app.get("/mag/:url_longue/:mag/:caisse",function(req,res) {
-  
-/*
-    io.on("connection",function(socket) {
-      session.magasin = "XOUXOU";
-       console.log("La caisse "+req.params.caisse+ "du magasin "+req.params.mag+"s'est connectéé" );
-       socket.on("ticket:"+req.params.mag+":"+req.params.caisse, function(ticket){console.log("ticket",ticket)})
-    })
-*/
-
   res.render('index', { title: 'CAISSE KERAWEN' ,  url_longue: req.params.url_longue, magasin: req.params.mag , caisse: req.params.caisse  });
 })
 
+app.post("/ticket",function(req,res) {
+	console.log("URL_LONGUE:",req.body.url_longue);
+	console.log("TICKET:",req.body.ticket);
+	var to_c = req.body.url_longue ;
+	console.log("TO_CAISSE",to_c);
+	console.log("CAISSE SOCKETS",util.inspect(caissesSockets[to_c]));
+	var id = caissesSockets[to_c].socket;
+        io.sockets.connected[id].emit("affiche_ticket",req.body.ticket);
+	res.end('ok');
+})
 
 var Controller = require('./lib/controller.js');
 
@@ -196,7 +193,5 @@ app.post('/upload/', function (req, res) {
     });
   
 });
-
-
 
 server.listen(3030)
